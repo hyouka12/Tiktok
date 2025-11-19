@@ -6,140 +6,105 @@
   <title>TikTok Downloader</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;700&display=swap');
-    body { margin:0; font-family:'Inter',sans-serif; height:100vh;
-      background: url('user.png') center/cover no-repeat;
-      display:flex; align-items:center; justify-content:center;
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      height: 100vh;
+      background: url('user.png') center/cover no-repeat;   /* ← ini yang berubah */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     .glass {
-      background: rgba(255,255,255,0.15);
+      background: rgba(255, 255, 255, 0.15);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
-      border-radius:24px; padding:40px 50px;
-      width:90%; max-width:500px;
-      box-shadow:0 20px 40px rgba(0,0,0,0.3);
-      border:1px solid rgba(255,255,255,0.2);
-      text-align:center; color:white;
+      border-radius: 24px;
+      padding: 40px 50px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      text-align: center;
+      color: white;
     }
-    h1{font-size:28px;margin:0 0 10px}
-    p{opacity:0.9;margin:0 0 18px;font-size:15px}
-    input{width:100%;padding:16px;border:none;border-radius:12px;
-      background:rgba(255,255,255,0.2);color:white;font-size:16px;margin-bottom:12px
+    h1 { font-size: 28px; margin: 0 0 10px; }
+    p { opacity: 0.9; margin: 0 0 25px; font-size: 15px; }
+    input {
+      width: 100%;
+      padding: 16px;
+      border: none;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      font-size: 16px;
+      margin-bottom: 15px;
     }
-    input::placeholder{color:rgba(255,255,255,0.7)}
-    .btn{background:#fe2c55;color:white;border:none;padding:14px 30px;
-      border-radius:12px;font-size:16px;cursor:pointer;margin:8px;width:100%;
+    input::placeholder { color: rgba(255,255,255,0.7); }
+    .btn {
+      background: #fe2c55;
+      color: white;
+      border: none;
+      padding: 14px 30px;
+      border-radius: 12px;
+      font-size: 16px;
+      cursor: pointer;
+      margin: 8px;
+      width: 100%;
     }
-    .btn:hover{background:#e01e47}
-    .result{margin-top:14px;font-weight:600}
-    a.hidden{display:none}
+    .btn:hover { background: #e01e47; }
+    .result { margin-top: 20px; font-weight: bold; }
   </style>
 </head>
 <body>
   <div class="glass">
     <h1>TikTok Downloader</h1>
     <p>No watermark • Gratis • Cepat</p>
-
     <input type="text" id="url" placeholder="Paste link TikTok di sini" />
-    <button class="btn" onclick="getVideo()">Download Video (No WM)</button>
+    <button class="btn"btn" onclick="getVideo()">Download Video (No WM)</button>
     <button class="btn" onclick="getMusic()">Download Musik/MP3</button>
-
     <div class="result" id="status">Masukkan link lalu pilih tombol</div>
-    <a id="dlAnchor" class="hidden" target="_blank" rel="noopener"></a>
   </div>
 
   <script>
     const status = document.getElementById('status');
-    const dlAnchor = document.getElementById('dlAnchor');
-
-    function safeFilename(name, ext) {
-      return (name || 'tiktok').replace(/[^a-z0-9_\- ]/gi,'').slice(0,60) + '.' + ext;
-    }
-
-    async function fetchJson(url) {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error('Network response not ok');
-        return await res.json();
-      } catch (e) {
-        throw e;
-      }
-    }
-
-    async function tryDownload(url, filename) {
-      // Coba langsung trigger download. Jika diblokir, buka di tab baru.
-      try {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        status.innerHTML = 'Download dimulai. Jika tidak, file dibuka di tab baru.';
-        // fallback open in new tab after short delay
-        setTimeout(() => {
-          dlAnchor.href = url;
-          dlAnchor.download = filename;
-          dlAnchor.click();
-        }, 800);
-      } catch (e) {
-        dlAnchor.href = url;
-        dlAnchor.download = filename;
-        dlAnchor.click();
-        status.innerHTML = 'Download dibuka di tab baru.';
-      }
-    }
-
+    
     async function getVideo() {
       const url = document.getElementById('url').value.trim();
-      if (!url || !url.includes('tiktok.com')) return status.innerHTML = 'Link TikTok salah bro';
-
+      if (!url.includes('tiktok.com')) return status.innerHTML = 'Link TikTok salah bro';
+      
       status.innerHTML = 'Sedang ambil video...';
-      try {
-        const api = 'https://api.tikwm.com/api/?url=' + encodeURIComponent(url);
-        const data = await fetchJson(api);
-
-        if (data && data.data) {
-          const videoUrl = data.data.play || data.data.download || data.data.video;
-          const title = data.data.title || 'tiktok';
-          if (!videoUrl) {
-            status.innerHTML = 'Video tidak ditemukan di API.';
-            return;
-          }
-          const filename = safeFilename(title, 'mp4');
-          await tryDownload(videoUrl, filename);
-        } else {
-          status.innerHTML = 'API tidak mengembalikan data.';
-        }
-      } catch (e) {
-        console.error(e);
-        status.innerHTML = 'Gagal ambil. Mungkin CORS atau API down.';
+      const res = await fetch(`https://api.tikwm.com/api/?url=${url}`);
+      const data = await res.json();
+      
+      if (data.data && data.data.play) {
+        const link = document.createElement('a');
+        link.href = data.data.play;
+        link.download = `${data.data.title || 'tiktok'}.mp4`;
+        link.click();
+        status.innerHTML = 'Video berhasil di-download!';
+      } else {
+        status.innerHTML = 'Gagal. Coba link lain.';
       }
     }
-
+    
     async function getMusic() {
+      {
       const url = document.getElementById('url').value.trim();
-      if (!url || !url.includes('tiktok.com')) return status.innerHTML = 'Link TikTok salah bro';
-
+      if (!url.includes('tiktok.com')) return status.innerHTML = 'Link TikTok salah bro';
+      
       status.innerHTML = 'Sedang ambil musik...';
-      try {
-        const api = 'https://api.tikwm.com/api/?url=' + encodeURIComponent(url);
-        const data = await fetchJson(api);
-
-        if (data && data.data) {
-          const musicUrl = data.data.music || data.data.musicUrl;
-          const title = data.data.title || 'tiktok_music';
-          if (!musicUrl) {
-            status.innerHTML = 'Musik tidak tersedia.';
-            return;
-          }
-          const filename = safeFilename(title, 'mp3');
-          await tryDownload(musicUrl, filename);
-        } else {
-          status.innerHTML = 'API tidak mengembalikan data.';
-        }
-      } catch (e) {
-        console.error(e);
-        status.innerHTML = 'Gagal ambil. Mungkin CORS atau API down.';
+      const res = await fetch(`https://api.tikwm.com/api/?url=${url}`);
+      const data = await res.json();
+      
+      if (data.data && data.data.music) {
+        const link = document.createElement('a');
+        link.href = data.data.music;
+        link.download = `${data.data.title || 'tiktok_music'}.mp3`;
+        link.click();
+        status.innerHTML = 'Musik berhasil di-download!';
+      } else {
+        status.innerHTML = 'Musik tidak tersedia.';
       }
     }
   </script>
